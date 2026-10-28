@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ панель - Karabalta Commits</title>
+    <style>
+        /* Дизайн стилдери (Скриншотко окшоштурулду) */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #0f111a;
+            color: #ffffff;
+            padding-bottom: 50px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #1f2335;
+            position: sticky;
+            top: 0;
+            background-color: #0f111a;
+            z-index: 10;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+        }
+
+        .header h1 span {
+            color: #4a90e2; /* Көк шестерня */
+        }
+
+        .close-btn {
+            background-color: #1a1e2d;
+            border: none;
+            color: #fff;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .product-list {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #1f2335;
+        }
+
+        .product-info {
+            flex: 1;
+            padding-right: 15px;
+        }
+
+        .product-title {
+            font-size: 15px;
+            margin-bottom: 5px;
+            line-height: 1.3;
+        }
+
+        .product-category {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn:active {
+            opacity: 0.7;
+        }
+
+        .btn-edit {
+            background-color: #3b4256;
+        }
+
+        .btn-delete {
+            background-color: #ff4757;
+        }
+
+        /* Карандаш жана урна белгилери (SVG) */
+        .icon-edit {
+            width: 20px;
+            height: 20px;
+            fill: #f1c40f; /* Сары түс */
+        }
+
+        .icon-delete {
+            width: 20px;
+            height: 20px;
+            fill: #ffffff; 
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1><span>⚙️</span> Админ панель</h1>
+        <button class="close-btn" onclick="alert('Жабуу баскычы басылды')">✕</button>
+    </div>
+
+    <div class="product-list" id="productList">
+        <!-- Товарлар ушул жерге JavaScript аркылуу чыгат -->
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. ОҢДОЛГОН ТОВАРЛАРДЫН БАЗАСЫ (JSON формат)
+        // ==========================================
+        const products = [
+            { id: 1, name: "Кольца от 100 до 130", category: "Кольца", price: 15, unit: "сом / шт" },
+            { id: 2, name: "Кольца от 135 до 150", category: "Кольца", price: 25, unit: "сом / шт" },
+            { id: 3, name: "Кольца от 155 до 180", category: "Кольца", price: 30, unit: "сом / шт" },
+            { id: 4, name: "Кольца от 185 и выше", category: "Кольца", price: 50, unit: "сом / шт" },
+            { id: 5, name: "Светодиодная лента 3000K", category: "Светодиодная лента", price: 850, unit: "сом / 10м" },
+            { id: 6, name: "Кольца от 10 до 95", category: "Кольца", price: 10, unit: "сом / шт" },
+            { id: 7, name: "Саморез", category: "Крепеж", price: 120, unit: "сом / пачка" },
+            { id: 8, name: "Чопик", category: "Крепеж", price: 100, unit: "сом / пачка" },
+            { id: 9, name: "Платформа маленькая", category: "Платформа", price: 25, unit: "сом / шт" },
+            { id: 10, name: "Платформа большая", category: "Платформа", price: 30, unit: "сом / шт" },
+            { id: 11, name: "Платформа для люстр", category: "Платформа", price: 70, unit: "сом / шт" },
+            { id: 12, name: "Кронштейн 75x100", category: "Кронштейн", price: 30, unit: "сом / шт" },
+            { id: 13, name: "Кронштейн 100x125", category: "Кронштейн", price: 40, unit: "сом / шт" },
+            { id: 14, name: "Кронштейн 125x150", category: "Кронштейн", price: 60, unit: "сом / шт" },
+            { id: 15, name: "Кронштейн 150x200", category: "Кронштейн", price: 70, unit: "сом / шт" },
+            { id: 16, name: "Кронштейн 200x250", category: "Кронштейн", price: 90, unit: "сом / шт" },
+            { id: 17, name: "Клей Оконг Корея", category: "Клей", price: 220, unit: "сом / шт" },
+            { id: 18, name: "Супер Клей", category: "Клей", price: 90, unit: "сом / шт" },
+            { id: 19, name: "Обводы для труб от 22 до 36", category: "Обводы", price: 30, unit: "сом / шт" },
+            { id: 20, name: "Обводы для труб от 45 до 55", category: "Обводы", price: 45, unit: "сом / шт" },
+            { id: 21, name: "Багет местный", category: "Багет", price: 20, unit: "сом / м" },
+            { id: 22, name: "Багет Россия", category: "Багет", price: 33, unit: "сом / м" },
+            { id: 23, name: "Багет Россия Ким", category: "Багет", price: 35, unit: "сом / м" },
+            { id: 24, name: "Теневой багет ПВХ", category: "Багет", price: 65, unit: "сом / м" },
+            { id: 25, name: "Теневой багет алюминий", category: "Багет", price: 180, unit: "сом / м" },
+            { id: 26, name: "Потолочный багет", category: "Багет", price: 120, unit: "сом / м" },
+            { id: 27, name: "Парящий алюминий багет", category: "Багет", price: 270, unit: "сом / м" },
+            { id: 28, name: "Гвозди от 18 до 38", category: "Крепеж", price: 180, unit: "сом / кг" },
+            { id: 29, name: "Гвозди от 45 до 50", category: "Крепеж", price: 200, unit: "сом / кг" },
+            { id: 30, name: "Световые линии 3см", category: "Световые линии", price: 320, unit: "сом / м" },
+            { id: 31, name: "Световые линии 5см", category: "Световые линии", price: 360, unit: "сом / м" },
+            { id: 32, name: "Магнитный трек", category: "Магнитный трек", price: 1000, unit: "сом / м" },
+            { id: 33, name: "Заглушка на магнитный трек", category: "Магнитный трек", price: 250, unit: "сом / шт" },
+            { id: 34, name: "Лампа 60см 24w нейтральный цвет", category: "Лампы", price: 450, unit: "сом / шт" },
+            { id: 35, name: "Лампа 60см 24w CCT", category: "Лампы", price: 550, unit: "сом / шт" },
+            { id: 36, name: "Переходник на трек", category: "Магнитный трек", price: 250, unit: "сом / шт" },
+            { id: 37, name: "Уголок", category: "Комплектующие", price: 450, unit: "сом / шт" },
+            { id: 38, name: "Заглушка", category: "Комплектующие", price: 100, unit: "сом / шт" },
+            { id: 39, name: "Заглушка на ПК-14", category: "Комплектующие", price: 250, unit: "сом / шт" },
+            { id: 40, name: "Заглушка на разделитель", category: "Комплектующие", price: 100, unit: "сом / шт" },
+            { id: 41, name: "Блок питания 300w", category: "Блок питания", price: 950, unit: "сом / шт" },
+            { id: 42, name: "Блок питания 200w", category: "Блок питания", price: 750, unit: "сом / шт" },
+            { id: 43, name: "Блок питания 100w", category: "Блок питания", price: 600, unit: "сом / шт" },
+            { id: 44, name: "Рассеиватель", category: "Комплектующие", price: 150, unit: "сом / м" },
+            { id: 45, name: "Провод 10см", category: "Провода", price: 10, unit: "сом / шт" },
+            { id: 46, name: "Провод 30см", category: "Провода", price: 30, unit: "сом / шт" },
+            { id: 47, name: "Софит 140", category: "Софиты", price: 140, unit: "сом / шт" },
+            { id: 48, name: "Софит 230", category: "Софиты", price: 230, unit: "сом / шт" },
+            { id: 49, name: "Софит 280", category: "Софиты", price: 280, unit: "сом / шт" },
+            { id: 50, name: "Карниз ПК-14 белый/черный", category: "Карниз", price: 650, unit: "сом / м" },
+            { id: 51, name: "Карниз ПК-15", category: "Карниз", price: 700, unit: "сом / м" },
+            { id: 52, name: "Вставка черная/белая", category: "Комплектующие", price: 35, unit: "сом / м" },
+            { id: 53, name: "Разделитель ПВХ", category: "Комплектующие", price: 125, unit: "сом / м" },
+            { id: 54, name: "Крючки", category: "Комплектующие", price: 550, unit: "сом / м" },
+            { id: 55, name: "Подвес", category: "Крепеж", price: 8, unit: "сом / шт" },
+            { id: 56, name: "Маленькая круглая вентиляционная решетка", category: "Вентиляционные решетки", price: 50, unit: "сом / шт" },
+            { id: 57, name: "Большая круглая вентиляционная решетка", category: "Вентиляционные решетки", price: 100, unit: "сом / шт" },
+            { id: 58, name: "Магнитная вентиляционная решетка", category: "Вентиляционные решетки", price: 900, unit: "сом / шт" }
+        ];
+
+        // ==========================================
+        // 2. ТОВАРЛАРДЫ ЭКРАНГА ЧЫГАРУУ ФУНКЦИЯСЫ
+        // ==========================================
+        const productList = document.getElementById('productList');
+
+        function renderProducts() {
+            productList.innerHTML = ''; // Мурунку тизмени тазалоо
+
+            products.forEach(product => {
+                // Ар бир товар үчүн div түзөбүз
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'product-item';
+
+                itemDiv.innerHTML = `
+                    <div class="product-info">
+                        <div class="product-title">${product.name} — ${product.price} ${product.unit}</div>
+                        <div class="product-category">(${product.category})</div>
+                    </div>
+                    <div class="product-actions">
+                        <button class="btn btn-edit" onclick="editProduct(${product.id})">
+                            <svg class="icon-edit" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                        </button>
+                        <button class="btn btn-delete" onclick="deleteProduct(${product.id})">
+                            <svg class="icon-delete" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                        </button>
+                    </div>
+                `;
+                productList.appendChild(itemDiv);
+            });
+        }
+
+        // ==========================================
+        // 3. БАСКЫЧТАРДЫН ИШТЕШИ (Функциялар)
+        // ==========================================
+        function editProduct(id) {
+            const product = products.find(p => p.id === id);
+            alert(`Өзгөртүү баскычы басылды.\nТовар: ${product.name}\nБаасы: ${product.price} ${product.unit}`);
+            // Бул жерге өзүңүздүн өзгөртүү терезеңиздин (модал) кодун жасасаңыз болот
+        }
+
+        function deleteProduct(id) {
+            const confirmDelete = confirm("Бул товарды чын эле өчүрүүнү каалайсызбы?");
+            if (confirmDelete) {
+                // Базадан өчүрүү
+                const index = products.findIndex(p => p.id === id);
+                if (index > -1) {
+                    products.splice(index, 1);
+                    renderProducts(); // Экранды жаңылоо
+                }
+            }
+        }
+
+        // Сайт ачылганда товарларды чыгаруу
+        renderProducts();
+
+    </script>
+</body>
+</html>
