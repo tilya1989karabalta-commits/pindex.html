@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ky">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
+<title>Тиля — Робот & Чек (v1.0.9)</title>
+<style>
+  :root {
+    --bg: #0f1220; --panel: #171b2e; --panel2: #1f2540;
+    --accent: #3b82f6; --accent2: #22c55e; --text: #e2e8f0;
+    --muted: #94a3b8; --danger: #ef4444;
+  }
+  * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; background: var(--bg); color: var(--text); height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+  
+  #loginScreen { position: fixed; inset: 0; background: rgba(15, 18, 32, 0.95); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .login-card { background: var(--panel); border-radius: 20px; padding: 24px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.05); }
+  .login-card h2 { margin: 0 0 5px 0; font-size: 22px; }
+  .login-card p { margin: 0 0 20px 0; color: var(--muted); font-size: 14px; }
+  .input-group { margin-bottom: 15px; }
+  .input-group input { width: 100%; padding: 15px; border-radius: 12px; background: #0d1020; border: 1px solid rgba(255,255,255,0.2); color: white; font-size: 16px; outline: none; }
+  .input-group input:focus { border-color: var(--accent); }
+  .checkbox-group { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; font-size: 14px; color: var(--muted); }
+  .btn-main { width: 100%; padding: 15px; border-radius: 12px; border: none; background: var(--accent); color: white; font-size: 16px; font-weight: bold; cursor: pointer; }
+  .forgot { text-align: center; margin-top: 20px; font-size: 12px; color: var(--muted); cursor: pointer; }
+
+  header { background: var(--panel); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); flex-shrink: 0; }
+  .header-title h1 { margin: 0; font-size: 18px; }
+  .header-title span { font-size: 12px; color: var(--muted); }
+  .header-actions { display: flex; gap: 8px; }
+  .icon-btn { background: var(--panel2); border: none; color: var(--text); width: 40px; height: 40px; border-radius: 10px; font-size: 18px; display: grid; place-items: center; cursor: pointer; }
+  .icon-btn.lang { width: auto; padding: 0 12px; font-size: 14px; font-weight: bold; }
+
+  #chatArea { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .msg-wrapper { display: flex; flex-direction: column; max-width: 85%; }
+  .msg-wrapper.bot { align-self: flex-start; }
+  .msg-wrapper.user { align-self: flex-end; }
+  .msg { padding: 12px 16px; border-radius: 16px; font-size: 15px; line-height: 1.4; white-space: pre-wrap; }
+  .msg.bot { background: #2a3152; border-bottom-left-radius: 4px; }
+  .msg.user { background: var(--accent); border-bottom-right-radius: 4px; }
+
+  .btn-receipt { margin-top: 8px; padding: 10px 16px; border-radius: 10px; border: none; background: #2a3152; color: white; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-size: 14px; align-self: flex-start; }
+
+  .bottom-container { background: var(--panel); flex-shrink: 0; display: flex; flex-direction: column; border-top: 1px solid rgba(255,255,255,0.05); }
+  .input-area { padding: 12px 16px; display: flex; gap: 10px; align-items: center; padding-bottom: 8px; }
+  .input-area input { flex: 1; padding: 14px; border-radius: 12px; border: none; background: var(--panel2); color: white; font-size: 15px; outline: none; }
+  .btn-send { background: var(--accent); color: white; border: none; width: 48px; height: 48px; border-radius: 12px; font-size: 20px; cursor: pointer; }
+  .btn-mic { background: var(--accent2); color: white; border: none; width: 48px; height: 48px; border-radius: 12px; font-size: 20px; cursor: pointer; }
+  .phone-info { text-align: center; font-size: 13px; color: var(--muted); padding: 6px 16px 12px 16px; font-weight: 500; }
+  .phone-info span { color: var(--accent); font-weight: bold; }
+
+  #receiptModal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
+  .receipt-box { background: #f8fafc; color: #1e293b; padding: 24px; border-radius: 12px; width: 100%; max-width: 350px; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.4); font-family: 'Courier New', Courier, monospace; max-height: 85vh; overflow-y: auto; }
+  .receipt-box::before, .receipt-box::after { content: ''; position: absolute; left: 0; right: 0; height: 10px; background-size: 20px 20px; background-image: linear-gradient(45deg, transparent 33.333%, #f8fafc 33.333%, #f8fafc 66.667%, transparent 66.667%), linear-gradient(-45deg, transparent 33.333%, #f8fafc 33.333%, #f8fafc 66.667%, transparent 66.667%); }
+  .receipt-box::before { top: -10px; background-position: 0 -10px; }
+  .receipt-box::after { bottom: -10px; transform: rotate(180deg); }
+  .receipt-header { text-align: center; border-bottom: 2px dashed #cbd5e1; padding-bottom: 12px; margin-bottom: 12px; }
+  .receipt-header h2 { margin: 0; font-size: 18px; }
+  .receipt-header p { margin: 4px 0 0 0; font-size: 12px; color: #64748b; }
+  .receipt-body { font-size: 13px; margin-bottom: 12px; }
+  .receipt-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .receipt-row.total { border-top: 2px dashed #cbd5e1; padding-top: 12px; margin-top: 12px; font-weight: bold; font-size: 16px; }
+  .receipt-footer { text-align: center; font-size: 12px; color: #64748b; margin-top: 16px; border-top: 1px dashed #cbd5e1; padding-top: 12px; }
+  .btn-close-receipt { width: 100%; padding: 12px; margin-top: 16px; border-radius: 8px; border: none; background: #1e293b; color: white; font-weight: bold; cursor: pointer; font-family: system-ui; }
+
+  #adminPanel { position: fixed; inset: 0; background: var(--bg); z-index: 900; display: none; flex-direction: column; }
+  .admin-header { padding: 16px; display: flex; justify-content: space-between; align-items: center; background: var(--panel); }
+  .admin-content { padding: 16px; overflow-y: auto; flex: 1; }
+  .admin-form { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+  .admin-form input { padding: 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: white; font-size: 15px; outline: none; }
+  .btn-add { background: var(--accent); color: white; border: none; padding: 14px; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; }
+  .product-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.05); gap: 10px; }
+  .product-info { flex: 1; font-size: 14px; line-height: 1.4; }
+  .product-actions { display: flex; gap: 8px; }
+  .btn-edit, .btn-del { border: none; width: 40px; height: 40px; border-radius: 10px; cursor: pointer; font-size: 16px; display: grid; place-items: center; color: white;}
+  .btn-edit { background: #475569; } .btn-del { background: var(--danger); }
+
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
+  .modal-box { background: var(--panel); padding: 20px; border-radius: 16px; width: 100%; max-width: 340px; }
+  .modal-box h3 { margin: 0 0 15px 0; font-size: 18px; }
+  .modal-box input { width: 100%; padding: 12px; border-radius: 10px; background: #0d1020; border: 1px solid #333; color: white; margin-bottom: 15px; }
+  .modal-actions { display: flex; gap: 10px; }
+  .modal-actions button { flex: 1; padding: 12px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; }
+  .btn-cancel { background: #333; color: white; } .btn-save { background: var(--accent2); color: white; }
+  #toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1e293b; color: white; padding: 12px 20px; border-radius: 10px; font-size: 14px; transition: 0.3s; z-index: 3000; opacity: 0; pointer-events: none; border: 1px solid #334155; }
+  #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div class="login-card">
+    <h2>🔐 Кирүү / Вход</h2>
+    <p>(v1.0.9)</p>
+    <div class="input-group"><input type="password" id="passwordInput" placeholder="Сырсөз / Пароль"></div>
+    <label class="checkbox-group"><input type="checkbox" id="showPassCheck" onclick="togglePassword()"><span>Сырсөздү көрсөт / Показать пароль</span></label>
+    <button class="btn-main" id="loginBtn">ОК</button>
+    <div class="forgot">Сырсөздү унуттум (баарын өчүрөт) / Забыл пароль</div>
+  </div>
+</div>
+
+<header>
+  <div class="header-title"><h1 id="botNameDisplay">Тиля</h1><span id="appVersion">v1.0.9</span></div>
+  <div class="header-actions">
+    <button class="icon-btn lang" id="langBtn" onclick="toggleLang()">КУ</button>
+    <button class="icon-btn" id="adminBtn" onclick="openAdmin()">⚙️</button>
+    <button class="icon-btn" id="lockBtn" onclick="lockApp()">🔒</button>
+  </div>
+</header>
+
+<div id="chatArea">
+  <div class="msg-wrapper bot"><div class="msg bot">Салам! Мен Тиля. Товарларды жана алардын санын үтүр (,) менен же жаңы саптан бөлүп жазыңыз. Мисалы: "Карниз 15м, Платформа 12шт". Мен так эсептеп, чек даярдайм.</div></div>
+</div>
+
+<div class="bottom-container">
+  <div class="input-area">
+    <input type="text" id="chatInput" placeholder="Жазыңыз же 🎤 басыңыз" autocomplete="off">
+    <button class="btn-send" id="sendBtn">➤</button>
+    <button class="btn-mic" id="micBtn">🎤</button>
+  </div>
+  <div class="phone-info">📞 Байланыш: <span>0556-652-652</span> • <span>0559-656-657</span></div>
+</div>
+
+<!-- ЧЕК МОДАЛКАСЫ -->
+<div id="receiptModal">
+  <div class="receipt-box">
+    <div class="receipt-header"><h2>🧾 ТИЛЯ ДҮКӨНҮ</h2><p>Дареги: Кыргызстан<br>Тел: 0556-652-652</p></div>
+    <div class="receipt-body" id="receiptBody"></div>
+    <div class="receipt-footer">Сатып алганыңыз үчүн рахмат!<br>Кайра келиңиз!</div>
+    <button class="btn-close-receipt" onclick="closeReceipt()">Жабуу</button>
+  </div>
+</div>
+
+<div id="adminPanel">
+  <div class="admin-header"><h2>⚙️ Админ панель</h2><button class="icon-btn" onclick="closeAdmin()">✕</button></div>
+  <div class="admin-content">
+    <h3 style="margin-top:0; font-size:16px;">Товарлар / Товары</h3>
+    <div class="admin-form">
+      <input type="text" id="prodName" placeholder="Аты / Название">
+      <input type="number" id="prodPrice" placeholder="Баасы (сом) / Цена">
+      <input type="text" id="prodUnit" placeholder="Өлчөмү (даана, м, кг)">
+      <input type="text" id="prodAliases" placeholder="Башка аттары (үтүр менен)">
+      <button class="btn-add" id="addProdBtn">Кошуу / Добавить</button>
+    </div>
+    <div id="productList"></div>
+  </div>
+</div>
+
+<div id="editModal" class="modal-overlay">
+  <div class="modal-box">
+    <h3>Товарды оңдоо</h3>
+    <input type="text" id="editName" placeholder="Аты">
+    <input type="number" id="editPrice" placeholder="Баасы">
+    <input type="text" id="editUnit" placeholder="Өлчөмү">
+    <input type="text" id="editAliases" placeholder="Башка аттары">
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeEditModal()">Жокко чыгаруу</button>
+      <button class="btn-save" id="saveEditBtn">Сактоо</button>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+const APP_VERSION = "1.0.9";
+const PASSWORD = "admin123";
+let currentLang = "ky";
+let products = [];
+let editId = null;
+
+function loadData() {
+  const saved = localStorage.getItem("tilya_products");
+  if (saved) { products = JSON.parse(saved); } 
+  else {
+    products = [
+      { id: 1, name: "Карниз ПК-14", price: 150, unit: "м", aliases: "Карниз, ПК-14" },
+      { id: 2, name: "Заглушка на ПК-14", price: 20, unit: "шт", aliases: "Заглушка" },
+      { id: 3, name: "Платформа маленькие", price: 25, unit: "шт", aliases: "Платформа" },
+      { id: 4, name: "Софит 230", price: 100, unit: "шт", aliases: "Софит" },
+      { id: 5, name: "Багет местный", price: 150, unit: "м", aliases: "Багет" },
+      { id: 6, name: "Светодиодная лента 3000k", price: 85, unit: "м", aliases: "Светодиодная лента, лента" },
+      { id: 7, name: "Вставка черная", price: 50, unit: "м", aliases: "Вставка" },
+      { id: 8, name: "Двойной гарпун", price: 60, unit: "м", aliases: "Двойной гарпун, гарпун" },
+      { id: 9, name: "Тандем", price: 80, unit: "м", aliases: "Тандем" }
+    ];
+    saveData();
+  }
+}
+function saveData() { localStorage.setItem("tilya_products", JSON.stringify(products)); }
+
+document.getElementById("loginBtn").addEventListener("click", function() {
+  if (document.getElementById("passwordInput").value === PASSWORD) {
+    document.getElementById("loginScreen").style.display = "none";
+    showToast("Кош келиңиз!");
+  } else { showToast("Туура эмес сырсөз!", true); }
+});
+document.getElementById("passwordInput").addEventListener("keydown", function(e) { if (e.key === "Enter") document.getElementById("loginBtn").click(); });
+function togglePassword() { const inp = document.getElementById("passwordInput"); inp.type = inp.type === "password" ? "text" : "password"; }
+document.querySelector(".forgot").addEventListener("click", function() { localStorage.clear(); showToast("Баары өчүрүлдү."); setTimeout(() => location.reload(), 1500); });
+function lockApp() { document.getElementById("passwordInput").value = ""; document.getElementById("loginScreen").style.display = "flex"; }
+
+/* ================= ЧАТ ЖАНА ЧЕК ЛОГИКАСЫ (SMART PARSING) ================= */
+const chatArea = document.getElementById("chatArea");
+const chatInput = document.getElementById("chatInput");
+const sendBtn = document.getElementById("sendBtn");
+
+function addMsg(text, sender, receiptData = null) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "msg-wrapper " + sender;
+  const div = document.createElement("div");
+  div.className = "msg " + sender;
+  div.innerHTML = text; // HTML колдонобуз (калың жазуу үчүн)
+  wrapper.appendChild(div);
+
+  if (receiptData && receiptData.items.length > 0) {
+    const btn = document.createElement("button");
+    btn.className = "btn-receipt";
+    btn.innerHTML = "🧾 Чекти көрүү / Посмотреть чек";
+    btn.addEventListener("click", () => showReceipt(receiptData));
+    wrapper.appendChild(btn);
+  }
+  chatArea.appendChild(wrapper);
+  chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function botReply(text) {
+  const t = text.toLowerCase().trim();
+  if (!t) return;
+
+  // 1. Текстти бөлүктөргө бөлүү (үтүр же жаңы сап боюнча)
+  // Эскертүү: Бул жерде биз текстти так бөлүп алабыз
+  const parts = t.split(/,|\n/);
+  
+  let foundItems = [];
+  let totalSum = 0;
+  let notFound = [];
+
+  parts.forEach(part => {
+    let partStr = part.trim();
+    if (!partStr) return;
+
+    // Ошол бөлүктөн санды издөө (мисалы: "карниз 15м" -> 15)
+    let qty = 1;
+    // Тексттен бардык сандарды таап, акыркысын алабыз
+    const numbers = partStr.match(/\d+/g);
+    if (numbers && numbers.length > 0) {
+      const lastNum = parseInt(numbers[numbers.length - 1]);
+      if (!isNaN(lastNum) && lastNum > 0 && lastNum < 10000) {
+        qty = lastNum;
+        // Санды тексттен өчүрүп салабыз, тек гана ат калсын
+        partStr = partStr.replace(lastNum, ''); 
+      }
+    }
+
+    // Ошол бөлүктөн товарды издөө
+    let found = null;
+    let maxScore = 0;
+    
+    products.forEach(p => {
+      let score = 0;
+      const pName = p.name.toLowerCase();
+      const pAliases = p.aliases ? p.aliases.toLowerCase().split(",") : [];
+      
+      if (partStr.includes(pName)) score += 10;
+      pAliases.forEach(alias => { 
+        if (partStr.includes(alias.trim())) score += 8; 
+      });
+
+      if (score > maxScore) { maxScore = score; found = p; }
+    });
+
+    if (found && maxScore > 0) {
+      const itemTotal = found.price * qty;
+      totalSum += itemTotal;
+      foundItems.push({
+        name: found.name, price: found.price, unit: found.unit, qty: qty, total: itemTotal
+      });
+    } else {
+      notFound.push(part.trim());
+    }
+  });
+
+  // 3. Жоопту даярдоо
+  if (foundItems.length > 0) {
+    let replyText = "<b>Эсептелди:</b>\n";
+    foundItems.forEach(item => {
+      replyText += `• ${item.name}: ${item.qty} ${item.unit} x ${item.price} сом = ${item.total} сом\n`;
+    });
+    replyText += `\n<b>Жалпы сумма: ${totalSum} сом</b>`;
+
+    if (notFound.length > 0) {
+      replyText += `\n\n<i>Табылбады (базада жок): ${notFound.join(", ")}</i>`;
+    }
+
+    const receiptData = {
+      items: foundItems,
+      totalSum: totalSum,
+      date: new Date().toLocaleString("ky-KG")
+    };
+
+    setTimeout(() => addMsg(replyText, "bot", receiptData), 300);
+  } else {
+    setTimeout(() => {
+      if (t.includes("салам") || t.includes("привет")) addMsg("Салам! Товарларды үтүр (,) менен бөлүп жазыңыз.", "bot");
+      else addMsg("Мен эч нерсе тапкан жокмун. Товарлардын аттарын так жазыңыз же аларды үтүр менен бөлүңүз.", "bot");
+    }, 300);
+  }
+}
+
+function sendMsg() {
+  const text = chatInput.value.trim();
+  if (!text) return;
+  addMsg(text, "user");
+  chatInput.value = "";
+  botReply(text);
+}
+sendBtn.addEventListener("click", sendMsg);
+chatInput.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); sendMsg(); } });
+document.getElementById("micBtn").addEventListener("click", () => { showToast("Микрофон иштебейт (демо)"); });
+
+/* ================= ЧЕКТИ КӨРСӨТҮҮ ================= */
+const receiptModal = document.getElementById("receiptModal");
+const receiptBody = document.getElementById("receiptBody");
+
+function showReceipt(data) {
+  let html = `<div class="receipt-row"><span>Дата:</span> <span>${data.date}</span></div><hr style="border:1px dashed #cbd5e1; margin:8px 0;">`;
+  
+  data.items.forEach(item => {
+    html += `
+      <div class="receipt-row"><span>${item.name}</span></div>
+      <div class="receipt-row" style="color:#64748b;">
+        <span>${item.qty} ${item.unit} x ${item.price} сом</span> 
+        <span>${item.total} сом</span>
+      </div>
+    `;
+  });
+
+  html += `<div class="receipt-row total"><span>ЖЫЙЫНТЫК:</span> <span>${data.totalSum} сом</span></div>`;
+  
+  receiptBody.innerHTML = html;
+  receiptModal.style.display = "flex";
+}
+
+function closeReceipt() { receiptModal.style.display = "none"; }
+receiptModal.addEventListener("click", (e) => { if (e.target === receiptModal) closeReceipt(); });
+
+/* ================= АДМИН ПАНЕЛЬ ================= */
+function toggleLang() {
+  currentLang = currentLang === "ky" ? "ru" : "ky";
+  const btn = document.getElementById("langBtn");
+  btn.textContent = currentLang === "ky" ? "КУ" : "РУ";
+  if (currentLang === "ru") {
+    document.querySelector(".msg.bot").innerHTML = "Привет! Я Тиля. Напишите товары и их количество через запятую (,) или с новой строки. Пример: 'Карниз 15м, Платформа 12шт'. Я точно посчитаю и подготовлю чек.";
+    chatInput.placeholder = "Напишите или нажмите 🎤";
+  } else {
+    document.querySelector(".msg.bot").innerHTML = "Салам! Мен Тиля. Товарларды жана алардын санын үтүр (,) менен же жаңы саптан бөлүп жазыңыз. Мисалы: 'Карниз 15м, Платформа 12шт'. Мен так эсептеп, чек даярдайм.";
+    chatInput.placeholder = "Жазыңыз же 🎤 басыңыз";
+  }
+}
+
+function openAdmin() { document.getElementById("adminPanel").style.display = "flex"; renderProducts(); }
+function closeAdmin() { document.getElementById("adminPanel").style.display = "none"; }
+
+document.getElementById("addProdBtn").addEventListener("click", () => {
+  const name = document.getElementById("prodName").value.trim();
+  const price = parseFloat(document.getElementById("prodPrice").value);
+  const unit = document.getElementById("prodUnit").value.trim() || "даана";
+  const aliases = document.getElementById("prodAliases").value.trim();
+
+  if (!name || isNaN(price)) { showToast("Атын жана баасын толук жазыңыз!", true); return; }
+  products.push({ id: Date.now(), name, price, unit, aliases });
+  saveData(); renderProducts();
+  document.getElementById("prodName").value = ""; document.getElementById("prodPrice").value = "";
+  document.getElementById("prodUnit").value = ""; document.getElementById("prodAliases").value = "";
+  showToast("Товар кошулду!");
+});
+
+function renderProducts() {
+  const list = document.getElementById("productList");
+  list.innerHTML = "";
+  products.forEach(p => {
+    const item = document.createElement("div");
+    item.className = "product-item";
+    item.innerHTML = `
+      <div class="product-info"><b>${p.name}</b> — ${p.price} сом / ${p.unit}<br><small style="color:#94a3b8">(${p.aliases || '-'})</small></div>
+      <div class="product-actions">
+        <button class="btn-edit" onclick="openEditModal(${p.id})">✏️</button>
+        <button class="btn-del" onclick="deleteProduct(${p.id})">🗑️</button>
+      </div>
+    `;
+    list.appendChild(item);
+  });
+}
+
+function deleteProduct(id) {
+  products = products.filter(p => p.id !== id);
+  saveData(); renderProducts(); showToast("Товар өчүрүлдү!");
+}
+
+function openEditModal(id) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  editId = id;
+  document.getElementById("editName").value = p.name;
+  document.getElementById("editPrice").value = p.price;
+  document.getElementById("editUnit").value = p.unit;
+  document.getElementById("editAliases").value = p.aliases || "";
+  document.getElementById("editModal").style.display = "flex";
+}
+function closeEditModal() { document.getElementById("editModal").style.display = "none"; editId = null; }
+
+document.getElementById("saveEditBtn").addEventListener("click", () => {
+  if (!editId) return;
+  const p = products.find(x => x.id === editId);
+  if (p) {
+    p.name = document.getElementById("editName").value.trim();
+    p.price = parseFloat(document.getElementById("editPrice").value) || 0;
+    p.unit = document.getElementById("editUnit").value.trim() || "даана";
+    p.aliases = document.getElementById("editAliases").value.trim();
+    saveData(); renderProducts(); closeEditModal(); showToast("Товар оңдолду!");
+  }
+});
+
+function showToast(msg, isError = false) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.style.borderColor = isError ? "var(--danger)" : "var(--accent)";
+  t.classList.add("show");
+  clearTimeout(window.toastTimer);
+  window.toastTimer = setTimeout(() => { t.classList.remove("show"); }, 2500);
+}
+
+loadData();
+</script>
+</body>
+</html>
